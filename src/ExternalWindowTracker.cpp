@@ -487,6 +487,33 @@ CPoint ExternalWindowTracker::FocusCaret()
                         if (pt.x != -1 && pt.y != -1) return pt;
                     }
                 }
+                // Some Chromium providers expose TextPattern but not TextPattern2.
+                CComPtr<IUIAutomationTextPattern> text1;
+                focused->GetCurrentPatternAs(UIA_TextPatternId, IID_PPV_ARGS(&text1));
+                CComPtr<IUIAutomationTextRangeArray> selection;
+                if (text1 && SUCCEEDED(text1->GetSelection(&selection)) && selection)
+                {
+                    int count = 0; selection->get_Length(&count);
+                    CComPtr<IUIAutomationTextRange> range;
+                    if (count > 0 && SUCCEEDED(selection->GetElement(0, &range)) && range)
+                    {
+                        range->MoveEndpointByRange(TextPatternRangeEndpoint_Start, range, TextPatternRangeEndpoint_End);
+                        range->ExpandToEnclosingUnit(TextUnit_Character);
+                        SAFEARRAY* rectangles = nullptr;
+                        if (SUCCEEDED(range->GetBoundingRectangles(&rectangles)) && rectangles)
+                        {
+                            LONG lo = 0, hi = -1; double* values = nullptr;
+                            SafeArrayGetLBound(rectangles, 1, &lo); SafeArrayGetUBound(rectangles, 1, &hi);
+                            if (hi - lo + 1 >= 4 && SUCCEEDED(SafeArrayAccessData(rectangles, reinterpret_cast<void**>(&values))))
+                            {
+                                if (values[3] > 0) pt.SetPoint(int(values[0]), int(values[1] + values[3]));
+                                SafeArrayUnaccessData(rectangles);
+                            }
+                            SafeArrayDestroy(rectangles);
+                            if (pt.x != -1 && pt.y != -1) return pt;
+                        }
+                    }
+                }
                 CONTROLTYPEID type = 0; RECT bounds = {};
                 focused->get_CurrentControlType(&type);
                 if (type == UIA_EditControlTypeId && SUCCEEDED(focused->get_CurrentBoundingRectangle(&bounds)) && bounds.bottom > bounds.top && bounds.bottom - bounds.top < 400)

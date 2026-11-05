@@ -1,6 +1,6 @@
-<Ditto_Theme_File Version="3" Author="Ditto Fluent fork" Notes="Clipboard-only light cards">
+﻿<Ditto_Theme_File Version="3" Author="Ditto Fluent fork" Notes="Clipboard-only light cards">
 <CaptionLeft>RGB(246,247,249)</CaptionLeft><CaptionRight>RGB(246,247,249)</CaptionRight>
-<CaptionTextColor>RGB(32,34,38)</CaptionTextColor><CaptionSize>42</CaptionSize><CaptionFontSize>19</CaptionFontSize>
+<CaptionTextColor>RGB(32,34,38)</CaptionTextColor><CaptionSize>38</CaptionSize><CaptionFontSize>18</CaptionFontSize>
 <Border>RGB(220,223,228)</Border><BorderTopMost>RGB(120,170,220)</BorderTopMost>
 <ListBoxOddRowsBG>RGB(255,255,255)</ListBoxOddRowsBG><ListBoxEvenRowsBG>RGB(255,255,255)</ListBoxEvenRowsBG>
 <ListBoxOddRowsText>RGB(32,34,38)</ListBoxOddRowsText><ListBoxEvenRowsText>RGB(32,34,38)</ListBoxEvenRowsText>

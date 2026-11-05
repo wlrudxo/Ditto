@@ -149,8 +149,12 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 	CPoint ptCaret = theApp.m_activeWnd.FocusCaret();
     if (ptCaret.x == -1 || ptCaret.y == -1)
     {
-        // Do not jump to the centre of an unrelated window when no caret is exposed.
-        GetCursorPos(&ptCaret);
+        // No mouse fallback: use the input window's lower edge if its caret is unavailable.
+        RECT input = {};
+        if (GetWindowRect(theApp.m_activeWnd.ActiveWnd(), &input))
+            ptCaret.SetPoint(input.left + 24, input.bottom - 48);
+        else
+            CGetSetOptions::GetQuickPastePoint(ptCaret);
     }
     const UINT targetDpi = GetDpiForWindow(theApp.m_activeWnd.ActiveWnd());
     const int anchorGap = MulDiv(8, targetDpi ? targetDpi : 96, 96);

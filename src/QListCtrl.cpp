@@ -420,7 +420,7 @@ void CQListCtrl::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 	GetTextMetrics(hDC, &tm);
 	if (m_windowDpi != NULL)
 	{
-		lpMeasureItemStruct->itemHeight = max(m_windowDpi->Scale(104), ((tm.tmHeight + tm.tmExternalLeading) * m_linesPerRow) + m_windowDpi->Scale(28));
+		lpMeasureItemStruct->itemHeight = max(m_windowDpi->Scale(84), ((tm.tmHeight + tm.tmExternalLeading) * m_linesPerRow) + m_windowDpi->Scale(28));
 		m_rowHeight = lpMeasureItemStruct->itemHeight;
 	}
 	SelectObject(hDC, hFontOld);
@@ -511,6 +511,9 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 		// Native cards: retain the original virtual list, selection and paste pipeline.
         pDC->FillSolidRect(rcItem, CGetSetOptions::m_Theme.MainWindowBG());
         CRect card(rcItem);
+        CRect popupClient;
+        GetParent()->GetClientRect(&popupClient);
+        card.right = min(card.right, popupClient.Width());
         card.DeflateRect(m_windowDpi->Scale(10), m_windowDpi->Scale(4));
         CBrush cardBrush(crBkgnd);
         CPen cardPen(PS_SOLID, 1, (rItem.state & LVIS_SELECTED) ? RGB(120, 170, 220) : RGB(226, 228, 232));
@@ -561,7 +564,7 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 		DrawCopiedColorCode(csText, rcText, pDC);
 
 		const bool imageOnly = csText == _T("CF_DIB") || csText == _T("CF_DIBV5") || csText == _T("PNG");
-        DrawBitMap(nItem, rcText, pDC, csText);
+        if (imageOnly) DrawBitMap(nItem, rcText, pDC, csText);
         // Only suppress the automatically generated format description, never stored data.
         if (imageOnly) csText.Empty();
 
@@ -599,7 +602,7 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 			}
 		}
 
-		if (!imageOnly && DrawRtfText(nItem, rcText, pDC) == FALSE)
+		if (!imageOnly)
 		{
 			auto highlightColor = CGetSetOptions::m_Theme.SearchTextHighlight();
 			//use unprintable characters so it doesn't find copied html to convert
