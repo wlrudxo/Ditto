@@ -1,4 +1,4 @@
-// BitmapHelper.cpp: implementation of the CBitmapHelper class.
+﻿// BitmapHelper.cpp: implementation of the CBitmapHelper class.
 //
 //////////////////////////////////////////////////////////////////////
 
@@ -389,4 +389,25 @@ bool CBitmapHelper::DrawDIB(CDC* pDC, HANDLE hData, int nLeft, int nRight, int& 
 	GlobalUnlock(hData);
 
 	return true;
+}
+// Input is Ditto's normalized, bounded thumbnail DIB, not the original clipboard payload.
+bool CBitmapHelper::DrawDIBContained(CDC* dc, HANDLE data, const CRect& box, int& width)
+{
+    auto bi = static_cast<BITMAPINFO*>(GlobalLock(data));
+    if (!bi) return false;
+    const int w = bi->bmiHeader.biWidth, h = abs(bi->bmiHeader.biHeight);
+    if (w <= 0 || h <= 0 || box.Width() <= 0 || box.Height() <= 0) { GlobalUnlock(data); return false; }
+    const double scale = min(1.0, min(double(box.Width()) / w, double(box.Height()) / h));
+    width = max(1, int(w * scale));
+    const int height = max(1, int(h * scale));
+    const DWORD colors = bi->bmiHeader.biClrUsed ? bi->bmiHeader.biClrUsed : (bi->bmiHeader.biBitCount <= 8 ? (1u << bi->bmiHeader.biBitCount) : 0);
+    const BYTE* bits = reinterpret_cast<const BYTE*>(bi) + bi->bmiHeader.biSize + colors * sizeof(RGBQUAD) + ((bi->bmiHeader.biCompression == BI_BITFIELDS && bi->bmiHeader.biSize == sizeof(BITMAPINFOHEADER)) ? 12 : 0);
+    int saved = dc->SaveDC();
+    dc->IntersectClipRect(box);
+    dc->SetStretchBltMode(HALFTONE);
+    SetBrushOrgEx(dc->m_hDC, 0, 0, NULL);
+    const int result = StretchDIBits(dc->m_hDC, box.left, box.top + (box.Height()-height)/2, width, height, 0, 0, w, h, bits, bi, DIB_RGB_COLORS, SRCCOPY);
+    dc->RestoreDC(saved);
+    GlobalUnlock(data);
+    return result != GDI_ERROR && result != 0;
 }

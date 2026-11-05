@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include ".\dittowindow.h"
 #include "CP_Main.h"
 #include "Options.h"
@@ -430,7 +430,7 @@ void CDittoWindow::DoNcPaint(CWnd *pWnd)
 	{
 		CRect size(0, 0, 0, 0);
 		dc.DrawText(csText, size, DT_CALCRECT);
-		textRect.left = textRect.right - size.Width() - m_dpi.Scale(10);
+		textRect.left = (m_useCustomWindowTitle && m_customWindowTitle == _T("클립보드")) ? m_dpi.Scale(16) : textRect.right - size.Width() - m_dpi.Scale(10);
 
 		flags |= DT_VCENTER;
 	}

@@ -1,4 +1,4 @@
-// QListCtrl.cpp : implementation file
+﻿// QListCtrl.cpp : implementation file
 //
 
 #include "stdafx.h"
@@ -420,7 +420,7 @@ void CQListCtrl::MeasureItem(LPMEASUREITEMSTRUCT lpMeasureItemStruct)
 	GetTextMetrics(hDC, &tm);
 	if (m_windowDpi != NULL)
 	{
-		lpMeasureItemStruct->itemHeight = ((tm.tmHeight + tm.tmExternalLeading) * m_linesPerRow) + m_windowDpi->Scale(ROW_BOTTOM_BORDER);
+		lpMeasureItemStruct->itemHeight = max(m_windowDpi->Scale(104), ((tm.tmHeight + tm.tmExternalLeading) * m_linesPerRow) + m_windowDpi->Scale(28));
 		m_rowHeight = lpMeasureItemStruct->itemHeight;
 	}
 	SelectObject(hDC, hFontOld);
@@ -508,13 +508,21 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 			}
 		}
 
-		pDC->FillSolidRect(rcItem, crBkgnd);
-		nOldBKMode = pDC->SetBkMode(TRANSPARENT);
+		// Native cards: retain the original virtual list, selection and paste pipeline.
+        pDC->FillSolidRect(rcItem, CGetSetOptions::m_Theme.MainWindowBG());
+        CRect card(rcItem);
+        card.DeflateRect(m_windowDpi->Scale(10), m_windowDpi->Scale(4));
+        CBrush cardBrush(crBkgnd);
+        CPen cardPen(PS_SOLID, 1, (rItem.state & LVIS_SELECTED) ? RGB(120, 170, 220) : RGB(226, 228, 232));
+        CBrush* oldBrush = pDC->SelectObject(&cardBrush);
+        CPen* oldPen = pDC->SelectObject(&cardPen);
+        pDC->RoundRect(card, CPoint(m_windowDpi->Scale(16), m_windowDpi->Scale(16)));
+        pDC->SelectObject(oldPen);
+        pDC->SelectObject(oldBrush);
+        nOldBKMode = pDC->SetBkMode(TRANSPARENT);
 
-		CRect rcText = rcItem;
-		rcText.left += m_windowDpi->Scale(ROW_LEFT_BORDER);
-		rcText.top += m_windowDpi->Scale(1);
-		rcText.bottom -= m_windowDpi->Scale(1);
+		CRect rcText = card;
+        rcText.DeflateRect(m_windowDpi->Scale(12), m_windowDpi->Scale(10));
 
 		if (m_showIfClipWasPasted &&
 			strSymbols.GetLength() > 0 &&
@@ -552,7 +560,10 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 
 		DrawCopiedColorCode(csText, rcText, pDC);
 
-		DrawBitMap(nItem, rcText, pDC, csText);
+		const bool imageOnly = csText == _T("CF_DIB") || csText == _T("CF_DIBV5") || csText == _T("PNG");
+        DrawBitMap(nItem, rcText, pDC, csText);
+        // Only suppress the automatically generated format description, never stored data.
+        if (imageOnly) csText.Empty();
 
 		// draw the symbol box
 		if (strSymbols.GetLength() > 0)
@@ -588,18 +599,18 @@ void CQListCtrl::OnCustomdrawList(NMHDR* pNMHDR, LRESULT* pResult)
 			}
 		}
 
-		if (DrawRtfText(nItem, rcText, pDC) == FALSE)
+		if (!imageOnly && DrawRtfText(nItem, rcText, pDC) == FALSE)
 		{
 			auto highlightColor = CGetSetOptions::m_Theme.SearchTextHighlight();
 			//use unprintable characters so it doesn't find copied html to convert
 			if (m_searchText.GetLength() > 0 &&
 				FindNoCaseAndInsert(csText, m_searchText, StrF(_T("\x01\x04 color='#%02x%02x%02x'\x02"), GetRValue(highlightColor), GetGValue(highlightColor), GetBValue(highlightColor)), _T("\x01\x03\x04\x02"), m_linesPerRow) > 0)
 			{
-				DrawHTML(pDC->m_hDC, csText, csText.GetLength(), rcText, DT_VCENTER | DT_EXPANDTABS | DT_NOPREFIX);
+				DrawHTML(pDC->m_hDC, csText, csText.GetLength(), rcText, DT_TOP | DT_WORDBREAK | DT_END_ELLIPSIS | DT_EXPANDTABS | DT_NOPREFIX);
 			}
 			else
 			{
-				pDC->DrawText(csText, rcText, DT_VCENTER | DT_EXPANDTABS | DT_NOPREFIX);
+				pDC->DrawText(csText, rcText, DT_TOP | DT_WORDBREAK | DT_END_ELLIPSIS | DT_EXPANDTABS | DT_NOPREFIX);
 			}
 		}
 
@@ -1179,7 +1190,7 @@ BOOL CQListCtrl::DrawBitMap(int nItem, CRect& crRect, CDC* pDC, const CString& c
 		{
 			//Will return the width of the bitmap in nWidth
 			int nWidth = 0;
-			if (CBitmapHelper::DrawDIB(pDC, smallImage, crRect.left, crRect.top, nWidth))
+			if (CBitmapHelper::DrawDIBContained(pDC, smallImage, crRect, nWidth))
 			{
 				// adjust the rect so other information can be drawn next to the thumbnail
 				crRect.left += nWidth + 3;

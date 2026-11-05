@@ -412,6 +412,8 @@ int CQPasteWnd::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	//BOOL b = this->Register(this);
 
 	SetWindowText(_T(QPASTE_TITLE));
+    m_DittoWindow.m_customWindowTitle = _T("클립보드");
+    m_DittoWindow.m_useCustomWindowTitle = true;
 
 	m_search.Create(WS_TABSTOP | WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL, CRect(0, 0, 0, 0), this, ID_EDIT_SEARCH);
 	m_search.SetDpiInfo(&m_DittoWindow.m_dpi);
@@ -770,7 +772,8 @@ void CQPasteWnd::MoveControls()
 
 	m_systemMenu.MoveWindow(cx - m_DittoWindow.m_dpi.Scale(30), cy - m_DittoWindow.m_dpi.Scale(28), m_DittoWindow.m_dpi.Scale(24), m_DittoWindow.m_dpi.Scale(24));
 
-	m_ShowGroupsFolderBottom.MoveWindow(m_DittoWindow.m_dpi.Scale(4), cy - m_DittoWindow.m_dpi.Scale(28), m_DittoWindow.m_dpi.Scale(24), m_DittoWindow.m_dpi.Scale(24));
+	m_ShowGroupsFolderBottom.ShowWindow(SW_HIDE);
+    m_search.MoveWindow(m_DittoWindow.m_dpi.Scale(14), cy - m_DittoWindow.m_dpi.Scale(searchRowStart - 5), cx - m_DittoWindow.m_dpi.Scale(54), m_DittoWindow.m_dpi.Scale(25));
 
 	/*if (CGetSetOptions::m_bShowPersistent &&
 		CGetSetOptions::m_bShowAlwaysOnTopWarning)
@@ -1436,7 +1439,7 @@ void CQPasteWnd::UpdateStatus(bool bRepaintImmediately)
 
 	SetToolTipText(title);
 
-	CString windowTitle = _T(QPASTE_TITLE);
+	CString windowTitle = _T("클립보드");
 
 	if (CGetSetOptions::m_bShowPersistent)
 	{
@@ -7363,6 +7366,7 @@ void CQPasteWnd::OnNMClickList1(NMHDR* pNMHDR, LRESULT* pResult)
 	}
 
 	LPNMITEMACTIVATE pNMItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pNMHDR);
+	if (pNMItemActivate->iItem < 0) { *pResult = 0; return; }
 	MSG msg;
 	msg.lParam = 0;
 	msg.wParam = VK_MOUSE_CLICK;

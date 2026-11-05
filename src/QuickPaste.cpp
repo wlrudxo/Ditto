@@ -1,8 +1,11 @@
-// QuickPaste.cpp: implementation of the CQuickPaste class.
+﻿// QuickPaste.cpp: implementation of the CQuickPaste class.
 //
 //////////////////////////////////////////////////////////////////////
 
 #include "stdafx.h"
+#include <dwmapi.h>
+#include "ClipboardPlacement.h"
+#pragma comment(lib, "dwmapi.lib")
 #include "CP_Main.h"
 #include "QuickPaste.h"
 
@@ -45,7 +48,7 @@ void CQuickPaste::Create(CWnd *pParent)
 	CGetSetOptions::GetQuickPastePoint(point);
 	CGetSetOptions::GetQuickPasteSize(csSize);
 
-	CRect crRect = CRect(point, csSize);
+    CRect crRect = CRect(point, csSize);
 	// Create the window
 	ASSERT( m_pwndPaste->Create(crRect, pParent) );
 	// place it at the previous position and size
@@ -144,33 +147,14 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 	}
 
 	CPoint ptCaret = theApp.m_activeWnd.FocusCaret();
-	if(ptCaret.x == -1 || ptCaret.y == -1)
-	{
-		CRect cr;
-		::GetWindowRect(theApp.m_activeWnd.ActiveWnd(), cr);
-		
-		if(theApp.m_activeWnd.DesktopHasFocus() == false &&
-			cr.Width() > 0 && 
-			cr.Height() > 0)
-		{
-			ptCaret = cr.CenterPoint();
-			ptCaret.x -= csSize.cx/2;
-			ptCaret.y -= csSize.cy/2;
-		}
-		else
-		{
-			GetCursorPos(&point);
+    if (ptCaret.x == -1 || ptCaret.y == -1)
+    {
+        // Do not jump to the centre of an unrelated window when no caret is exposed.
+        GetCursorPos(&ptCaret);
+    }
+    const UINT targetDpi = GetDpiForWindow(theApp.m_activeWnd.ActiveWnd());
+    const int anchorGap = MulDiv(8, targetDpi ? targetDpi : 96, 96);
 
-			CRect crPoint(point, CSize(1, 1));
-
-			CRect crMonitor = MonitorRectFromRect(crPoint);
-
-			ptCaret = crMonitor.CenterPoint();
-			ptCaret.x -= csSize.cx/2;
-			ptCaret.y -= csSize.cy/2;
-		}
-	}
-	
 	if(bAtPrevPos)
 	{
 		CGetSetOptions::GetQuickPastePoint(point);
@@ -179,6 +163,7 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 	else if (nPosition == POS_AT_CARET)
 	{
 		point = ptCaret;
+        point.y += anchorGap;
 		if (CGetSetOptions::m_centerWindowBelowCursorOrCaret)
 		{
 			point.x -= csSize.cx / 2;
@@ -199,7 +184,17 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 	else if(nPosition == POS_AT_PREVIOUS)
 		CGetSetOptions::GetQuickPastePoint(point);
 
+    auto anchorPopup = [&](CRect& rect) {
+        if (bAtPrevPos || nPosition != POS_AT_CARET) return;
+        MONITORINFO monitor = { sizeof(monitor) };
+        if (!GetMonitorInfo(MonitorFromPoint(ptCaret, MONITOR_DEFAULTTONEAREST), &monitor)) return;
+        const auto placed = ClipboardPlacement::NearCaret(ptCaret.x, ptCaret.y, rect.Width(), rect.Height(),
+            { int(monitor.rcWork.left), int(monitor.rcWork.top), int(monitor.rcWork.right), int(monitor.rcWork.bottom) },
+            anchorGap, MulDiv(20, targetDpi ? targetDpi : 96, 96), CGetSetOptions::m_centerWindowBelowCursorOrCaret != FALSE);
+        rect.SetRect(placed.left, placed.top, placed.right, placed.bottom);
+    };
 	CRect crRect = CRect(point, csSize);
+    anchorPopup(crRect);
 
 	bool forceMoveWindow = m_forceResizeOnNextShow;
 
@@ -251,6 +246,7 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 			{
 				crRect.right = crRect.left + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Width());
 				crRect.bottom = crRect.top + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Height());
+                anchorPopup(crRect);
 
 				if (CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
 				{
@@ -272,6 +268,7 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 			{
 				crRect.right = crRect.left + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Width());
 				crRect.bottom = crRect.top + m_pwndPaste->m_DittoWindow.m_dpi.Scale(crRect.Height());
+                anchorPopup(crRect);
 
 				if (CGetSetOptions::m_bEnsureEntireWindowCanBeSeen)
 				{
@@ -286,7 +283,10 @@ void CQuickPaste::ShowQPasteWnd(CWnd *pParent, bool bAtPrevPos, bool bFromKeyboa
 		m_pwndPaste->ShowWindow(SW_SHOW);
 	}	
 
-	m_pwndPaste->SetKeyModiferState(bFromKeyboard);	
+	// Windows 11 corners, while retaining Ditto's native window and message handling.
+    const DWORD cornerPreference = 2; // DWMWCP_ROUND
+    DwmSetWindowAttribute(m_pwndPaste->GetSafeHwnd(), 33, &cornerPreference, sizeof(cornerPreference));
+    m_pwndPaste->SetKeyModiferState(bFromKeyboard);
 
 	if(bReFillList)
 	{

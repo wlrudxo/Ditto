@@ -1,10 +1,11 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "externalwindowtracker.h"
 #include "Misc.h"
 #include "SendKeys.h"
 #include "Options.h"
 #include "CP_Main.h"
 #include "UAC_Helper.h"
+#include <UIAutomation.h>
 
 ExternalWindowTracker::ExternalWindowTracker(void)
 {
@@ -450,7 +451,51 @@ CPoint ExternalWindowTracker::FocusCaret()
 	if(!m_activeWnd || !m_focusWnd)
 		return pt;
 
-	//first try getting the caret position using IAccessible object
+    // UI Automation exposes modern browser/Electron text inputs that have no HWND caret.
+    CComPtr<IUIAutomation> automation;
+    if (SUCCEEDED(automation.CoCreateInstance(CLSID_CUIAutomation8)))
+    {
+        CComQIPtr<IUIAutomation2> automation2(automation);
+        if (automation2) { automation2->put_ConnectionTimeout(200); automation2->put_TransactionTimeout(200); }
+        CComPtr<IUIAutomationElement> focused;
+        if (SUCCEEDED(automation->GetFocusedElement(&focused)) && focused)
+        {
+            int processId = 0;
+            DWORD targetPid = 0;
+            GetWindowThreadProcessId(m_activeWnd, &targetPid);
+            focused->get_CurrentProcessId(&processId);
+            if (DWORD(processId) == targetPid || GetAncestor(GetForegroundWindow(), GA_ROOT) == GetAncestor(m_activeWnd, GA_ROOT))
+            {
+                CComPtr<IUIAutomationTextPattern2> text;
+                focused->GetCurrentPatternAs(UIA_TextPattern2Id, IID_PPV_ARGS(&text));
+                CComPtr<IUIAutomationTextRange> caret;
+                BOOL active = FALSE;
+                if (text && SUCCEEDED(text->GetCaretRange(&active, &caret)) && active && caret)
+                {
+                    SAFEARRAY* rectangles = nullptr;
+                    if (SUCCEEDED(caret->GetBoundingRectangles(&rectangles)) && rectangles)
+                    {
+                        LONG lo = 0, hi = -1;
+                        SafeArrayGetLBound(rectangles, 1, &lo); SafeArrayGetUBound(rectangles, 1, &hi);
+                        double* values = nullptr;
+                        if (hi - lo + 1 >= 4 && SUCCEEDED(SafeArrayAccessData(rectangles, reinterpret_cast<void**>(&values))))
+                        {
+                            if (values[3] > 0) pt.SetPoint(int(values[0]), int(values[1] + values[3]));
+                            SafeArrayUnaccessData(rectangles);
+                        }
+                        SafeArrayDestroy(rectangles);
+                        if (pt.x != -1 && pt.y != -1) return pt;
+                    }
+                }
+                CONTROLTYPEID type = 0; RECT bounds = {};
+                focused->get_CurrentControlType(&type);
+                if (type == UIA_EditControlTypeId && SUCCEEDED(focused->get_CurrentBoundingRectangle(&bounds)) && bounds.bottom > bounds.top && bounds.bottom - bounds.top < 400)
+                    return CPoint(bounds.left + 12, bounds.bottom);
+            }
+        }
+    }
+    // Legacy applications expose a native or MSAA caret.
+    //first try getting the caret position using IAccessible object
 	if (m_AccessibleObjectFromWindow)
 	{
 		{
@@ -467,7 +512,7 @@ CPoint ExternalWindowTracker::FocusCaret()
 				if (hr == S_OK && left != 0 && top != 0)
 				{
 					// calculate offset of caret by Accessible 
-					pt.SetPoint(left + width, top + 20);
+					pt.SetPoint(left, top + max(height, 1L));
 				}
 			}
 		}
@@ -485,7 +530,7 @@ CPoint ExternalWindowTracker::FocusCaret()
 		if(rc.IsRectEmpty() == FALSE)
 		{
 			pt = rc.BottomRight();
-			::ClientToScreen(m_focusWnd, &pt);
+			::ClientToScreen(guiThreadInfo.hwndCaret ? guiThreadInfo.hwndCaret : m_focusWnd, &pt);
 		}
 	}
 	if(pt.x != -1 && pt.y != -1)

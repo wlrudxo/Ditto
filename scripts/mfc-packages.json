@@ -1,0 +1,74 @@
+[
+  {
+    "fileName": "Microsoft.VC.14.50.18.0.ATL.Headers.vsix",
+    "sha256": "deb1e91bd80c53d3dbb4e235a8951b0d0ec476469842eed64ef36674b550665c",
+    "size": 1064,
+    "url": "https://download.visualstudio.microsoft.com/download/pr/eef0996f-4334-4b1a-a344-4d13e27ac052/deb1e91bd80c53d3dbb4e235a8951b0d0ec476469842eed64ef36674b550665c/Microsoft.VC.14.50.18.0.ATL.Headers.vsix",
+    "signer": {
+      "$ref": "1"
+    }
+  },
+  {
+    "fileName": "Microsoft.VC.14.50.18.0.ATL.Headers.base.vsix",
+    "sha256": "64e638a9e62e056a14b16cf66c2d7710291a6d408953065e2a8caf45ab995e42",
+    "size": 579248,
+    "url": "https://download.visualstudio.microsoft.com/download/pr/eef0996f-4334-4b1a-a344-4d13e27ac052/64e638a9e62e056a14b16cf66c2d7710291a6d408953065e2a8caf45ab995e42/Microsoft.VC.14.50.18.0.ATL.Headers.base.vsix",
+    "signer": {
+      "$ref": "1"
+    }
+  },
+  {
+    "fileName": "Microsoft.VC.14.50.18.0.ATL.X64.vsix",
+    "sha256": "188214d51b18e3be7e449d8696a7fd3666dad579d5fba43bea63b1939b9448ee",
+    "size": 1061,
+    "url": "https://download.visualstudio.microsoft.com/download/pr/eef0996f-4334-4b1a-a344-4d13e27ac052/188214d51b18e3be7e449d8696a7fd3666dad579d5fba43bea63b1939b9448ee/Microsoft.VC.14.50.18.0.ATL.X64.vsix",
+    "signer": {
+      "$ref": "1"
+    }
+  },
+  {
+    "fileName": "Microsoft.VC.14.50.18.0.ATL.X64.base.vsix",
+    "sha256": "6625a6d9749797d140f64460dc9a846dc702d133e790b2eb636485f0fa8021db",
+    "size": 862802,
+    "url": "https://download.visualstudio.microsoft.com/download/pr/eef0996f-4334-4b1a-a344-4d13e27ac052/6625a6d9749797d140f64460dc9a846dc702d133e790b2eb636485f0fa8021db/Microsoft.VC.14.50.18.0.ATL.X64.base.vsix",
+    "signer": {
+      "$ref": "1"
+    }
+  },
+  {
+    "fileName": "Microsoft.VC.14.50.18.0.MFC.Headers.vsix",
+    "sha256": "9b81d2d5c4226b011e0b8b2739ccb22b4f2c0246f1f0e3125039e3cb5405bf12",
+    "size": 1063,
+    "url": "https://download.visualstudio.microsoft.com/download/pr/eef0996f-4334-4b1a-a344-4d13e27ac052/9b81d2d5c4226b011e0b8b2739ccb22b4f2c0246f1f0e3125039e3cb5405bf12/Microsoft.VC.14.50.18.0.MFC.Headers.vsix",
+    "signer": {
+      "$ref": "1"
+    }
+  },
+  {
+    "fileName": "Microsoft.VC.14.50.18.0.MFC.Headers.base.vsix",
+    "sha256": "0681c037888aba5cef4b1ae705a23b0851f21923be1df2a75c28e6042897d620",
+    "size": 2382624,
+    "url": "https://download.visualstudio.microsoft.com/download/pr/eef0996f-4334-4b1a-a344-4d13e27ac052/0681c037888aba5cef4b1ae705a23b0851f21923be1df2a75c28e6042897d620/Microsoft.VC.14.50.18.0.MFC.Headers.base.vsix",
+    "signer": {
+      "$ref": "1"
+    }
+  },
+  {
+    "fileName": "Microsoft.VC.14.50.18.0.MFC.X64.vsix",
+    "sha256": "9771af5296658c0fe86badc22278493407fcee1bd601575bacb69b21964b299f",
+    "size": 1061,
+    "url": "https://download.visualstudio.microsoft.com/download/pr/eef0996f-4334-4b1a-a344-4d13e27ac052/9771af5296658c0fe86badc22278493407fcee1bd601575bacb69b21964b299f/Microsoft.VC.14.50.18.0.MFC.X64.vsix",
+    "signer": {
+      "$ref": "1"
+    }
+  },
+  {
+    "fileName": "Microsoft.VC.14.50.18.0.MFC.X64.base.vsix",
+    "sha256": "1299c96e45f30b1c41937e8e510e70364975b2995805004fcb307dddee793eea",
+    "size": 33434951,
+    "url": "https://download.visualstudio.microsoft.com/download/pr/eef0996f-4334-4b1a-a344-4d13e27ac052/1299c96e45f30b1c41937e8e510e70364975b2995805004fcb307dddee793eea/Microsoft.VC.14.50.18.0.MFC.X64.base.vsix",
+    "signer": {
+      "$ref": "1"
+    }
+  }
+]

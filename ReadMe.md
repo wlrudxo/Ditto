@@ -1,3 +1,15 @@
+# Ditto Fluent 포크
+
+Windows 11 클립보드에 가까운 단일 클릭 목록을 위한 네이티브 MFC 수정본이다. 현재 적용·검증 상태는 [STATUS.md](STATUS.md)에 있다.
+
+- `Win + V`로 열고 항목 한 번 클릭으로 붙여넣는다. 기존 AutoHotkey에 `/Open` 연결을 추가한다.
+- 밝은 카드, 줄바꿈 텍스트 미리보기, 카드 안에 맞춘 이미지, UI Automation 캐럿 위치를 사용한다.
+- 기존 기록 DB, 클립보드 형식, 검색과 붙여넣기 경로를 유지한다. 원본 GPL-3.0 라이선스를 따른다.
+- 테마 파일은 `Themes/FluentClipboard.xml`, 위치 회귀 테스트는 `tests/placement.cpp`다.
+
+빌드: Visual Studio 2026의 C++ x64 도구와 Windows SDK가 필요하다. MFC가 없는 환경은 `scripts/prepare_mfc.py`를 Python으로 실행하면 공식 Microsoft 패키지를 SHA-256 검증 후 무시되는 `local/` 아래에 준비한다. 이어서 `scripts/build.ps1`을 실행한다. Microsoft 빌드 의존성은 저장소에 배포하지 않는다.
+
+원본 프로젝트 안내:
 # [Ditto - Clipboard Manager](https://github.com/sabrogden/Ditto/releases/download/3.25.113.0/DittoSetup_3_25_113_0.exe)
 
 ![GitHub Downloads (all assets, latest release)](https://img.shields.io/github/downloads/sabrogden/Ditto/latest/total) ![GitHub commits since latest release](https://img.shields.io/github/commits-since/sabrogden/Ditto/latest) ![GitHub contributors](https://img.shields.io/github/contributors/sabrogden/Ditto)
