@@ -743,6 +743,10 @@ void CQPasteWnd::MoveControls()
 		m_noSearchResultsStatic.ShowWindow(SW_HIDE);
 
 		m_lstHeader.MoveWindow(0, topOfListBox, cx + extraSize, cy - listBoxBottomOffset - topOfListBox + extraSize + 1);
+        // The upstream 2500-pixel column is for unwrapped text; cards fit the viewport.
+        m_lstHeader.Scroll(CSize(-m_lstHeader.GetScrollPos(SB_HORZ), 0));
+        m_lstHeader.SetColumnWidth(0, max(1, cx - 1));
+        m_lstHeader.ShowScrollBar(SB_HORZ, FALSE);
 		
 		// Update modern scrollbar position and visibility (only if enabled)
 		if (CGetSetOptions::m_useModernScrollBar)

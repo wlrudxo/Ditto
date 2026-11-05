@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "ModernScrollBar.h"
 #include "CP_Main.h"
 #include "QListCtrl.h"
@@ -19,7 +19,7 @@ CModernScrollBar::CModernScrollBar()
 	, m_thumbColor(RGB(180, 180, 180))
 	, m_thumbHoverColor(RGB(140, 140, 140))
 	, m_scrollBarWidth(8)
-	, m_scrollBarHoverWidth(12)
+	, m_scrollBarHoverWidth(8)
 	, m_cornerRadius(4)
 	, m_minThumbSize(30)
 	, m_isMouseOver(false)
@@ -79,6 +79,7 @@ void CModernScrollBar::SetColors(COLORREF trackColor, COLORREF thumbColor, COLOR
 
 void CModernScrollBar::UpdateScrollBar()
 {
+    if (m_orientation == ScrollBarOrientation::Horizontal) { Hide(false); return; }
 	if (!m_pListCtrl || !m_pListCtrl->m_hWnd)
 		return;
 
@@ -92,7 +93,7 @@ void CModernScrollBar::UpdateScrollBar()
 	// Check if scrollbar is needed
 	bool needsScrollBar = (si.nMax > 0 && si.nPage > 0 && (int)si.nPage <= si.nMax);
 	
-	if (!needsScrollBar)
+	if (!needsScrollBar && !CGetSetOptions::m_showScrollBar)
 	{
 		if (IsWindowVisible())
 			ShowWindow(SW_HIDE);
@@ -192,7 +193,16 @@ CRect CModernScrollBar::GetThumbRect()
 	m_pListCtrl->GetScrollInfo(scrollBarType, &si);
 
 	if (si.nMax <= 0 || si.nPage <= 0)
-		return thumbRect;
+    {
+        if (CGetSetOptions::m_showScrollBar && m_orientation == ScrollBarOrientation::Vertical)
+        {
+            const int thin = m_pDPI ? m_pDPI->Scale(4) : 4;
+            thumbRect = clientRect;
+            thumbRect.left = (clientRect.Width() - thin) / 2;
+            thumbRect.right = thumbRect.left + thin;
+        }
+        return thumbRect;
+    }
 
 	int trackSize = (m_orientation == ScrollBarOrientation::Vertical) ? clientRect.Height() : clientRect.Width();
 	int totalRange = si.nMax - si.nMin + 1;
@@ -226,8 +236,9 @@ CRect CModernScrollBar::GetThumbRect()
 
 	if (m_orientation == ScrollBarOrientation::Vertical)
 	{
-		thumbRect.left = -1;
-		thumbRect.right = clientRect.Width();
+		const int thin = m_pDPI ? m_pDPI->Scale(4) : 4;
+        thumbRect.left = (clientRect.Width() - thin) / 2;
+        thumbRect.right = thumbRect.left + thin;
 		thumbRect.top = thumbPos;
 		thumbRect.bottom = thumbPos + thumbSize;
 	}
@@ -542,6 +553,7 @@ void CModernScrollBar::ScrollToPosition(int thumbPos)
 
 void CModernScrollBar::Show(bool animate)
 {
+    if (m_orientation == ScrollBarOrientation::Horizontal) { Hide(false); return; }
 	m_isVisible = true;
 	ShowWindow(SW_SHOWNA);
 	
